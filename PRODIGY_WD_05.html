@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #e0f7fa;
+            color: #00796b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #00796b;
+        }
+
+        button {
+            background: #00796b;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #004d40;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App</h1>
+        <form id="location-form">
+            <input type="text" id="location-input" placeholder="Enter location" required>
+            <button type="submit">Get Weather</button>
+        </form>
+        <button id="current-location-btn">Use Current Location</button>
+        <div id="weather-display" class="hidden">
+            <h2 id="location-name"></h2>
+            <p id="weather-description"></p>
+            <p id="temperature"></p>
+            <p id="humidity"></p>
+            <p id="wind-speed"></p>
+        </div>
+    </div>
+    <script>
+        const appId = '7667272a4849a23df7a99227d606f0e5';
+
+        document.getElementById('location-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const location = document.getElementById('location-input').value;
+            getWeatherData(location);
+        });
+
+        document.getElementById('current-location-btn').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    getWeatherData(null, lat, lon);
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        });
+
+        function getWeatherData(location, lat = null, lon = null) {
+            let apiUrl = `https://api.openweathermap.org/data/2.5/weather?appid=${appId}&units=metric`;
+
+            if (location) {
+                apiUrl += `&q=${location}`;
+            } else if (lat !== null && lon !== null) {
+                apiUrl += `&lat=${lat}&lon=${lon}`;
+            }
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => displayWeatherData(data))
+                .catch(error => console.error('Error fetching the weather data:', error));
+        }
+
+        function displayWeatherData(data) {
+            if (data.cod === 200) {
+                document.getElementById('location-name').textContent = `${data.name}, ${data.sys.country}`;
+                document.getElementById('weather-description').textContent = `Weather: ${data.weather[0].description}`;
+                document.getElementById('temperature').textContent = `Temperature: ${data.main.temp} °C`;
+                document.getElementById('humidity').textContent = `Humidity: ${data.main.humidity} %`;
+                document.getElementById('wind-speed').textContent = `Wind Speed: ${data.wind.speed} m/s`;
+                document.getElementById('weather-display').classList.remove('hidden');
+            } else {
+                alert('Location not found. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>
